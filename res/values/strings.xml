@@ -1,0 +1,8 @@
+<resources>
+
+    <string name="location_info">Location within %1$d meters</string>
+    <string name="extension_name">Location</string>
+    <string name="application_name">Dashclock Location Extension</string>
+    <string name="extension_info">Displays information about the device\'s current location.</string>
+
+</resources>
