@@ -44,13 +44,11 @@ public class LocationWidget extends DashClockExtension {
 	 * (int)
 	 */
 	@Override
-	protected void onUpdateData(int arg0) {
-
-		setUpdateWhenScreenOn(true);
+	protected void onUpdateData(int intReason) {
 
 		Log.d("LocationWidget", "Getting the location of the device");
 		final ExtensionData edtInformation = new ExtensionData();
-		edtInformation.visible(false);
+		setUpdateWhenScreenOn(true);
 
 		try {
 
@@ -140,6 +138,7 @@ public class LocationWidget extends DashClockExtension {
 							}
 
 						} catch (Exception e) {
+							edtInformation.visible(false);
 							Log.e("LocationWidget", "Encountered an error", e);
 							BugSenseHandler.sendException(e);
 						}
@@ -185,6 +184,7 @@ public class LocationWidget extends DashClockExtension {
 			}
 
 		} catch (Exception e) {
+			edtInformation.visible(false);
 			Log.e("LocationWidget", "Encountered an error", e);
 			BugSenseHandler.sendException(e);
 		}
