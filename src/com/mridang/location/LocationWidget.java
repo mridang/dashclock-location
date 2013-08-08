@@ -124,6 +124,7 @@ public class LocationWidget extends DashClockExtension {
 
 										intMinimum = (int) (fltDistances[0] - fltAccuracy);
 										edtInformation.expandedBody(jsoResults.getJSONObject(intResult).getString("formatted_address"));
+										edtInformation.clickIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0")));
 
 									}
 
