@@ -84,70 +84,75 @@ public class LocationWidget extends DashClockExtension {
 
 				}
 
-				final Float fltAccuracy = locNewest.getAccuracy();
+				if (locNewest != null ) {
+					
+					final Float fltAccuracy = locNewest.getAccuracy();
 
-				Log.d("LocationWidget", "Making the rrequest to reverse geocode the coordinates");
-				new AsyncHttpClient()
-				.get("http://maps.googleapis.com/maps/api/geocode/json?latlng=" + locNewest.getLatitude() + "," + locNewest.getLongitude() + "&sensor=false",
-						new AsyncHttpResponseHandler() {
+					Log.d("LocationWidget", "Making the rrequest to reverse geocode the coordinates");
+					new AsyncHttpClient()
+					.get("http://maps.googleapis.com/maps/api/geocode/json?latlng=" + locNewest.getLatitude() + "," + locNewest.getLongitude() + "&sensor=false",
+							new AsyncHttpResponseHandler() {
 
-					@Override
-					public void onSuccess(String strResponse) {
+						@Override
+						public void onSuccess(String strResponse) {
 
-						Log.v("LocationWidget", "Server reponded with: " + strResponse);
+							Log.v("LocationWidget", "Server reponded with: " + strResponse);
 
-						try {
+							try {
 
-							JSONObject jsoResponse = new JSONObject(strResponse);
-							if (jsoResponse.getString("status").equalsIgnoreCase("OK")) {
+								JSONObject jsoResponse = new JSONObject(strResponse);
+								if (jsoResponse.getString("status").equalsIgnoreCase("OK")) {
 
-								edtInformation.expandedBody("");
-								edtInformation.expandedTitle(getString(R.string.location_info, fltAccuracy.intValue()));
+									edtInformation.expandedBody("");
+									edtInformation.expandedTitle(getString(R.string.location_info, fltAccuracy.intValue()));
 
-								JSONArray jsoResults = jsoResponse.getJSONArray("results");
-								Integer intMinimum = Integer.MAX_VALUE;
+									JSONArray jsoResults = jsoResponse.getJSONArray("results");
+									Integer intMinimum = Integer.MAX_VALUE;
 
-								for (Integer intResult = 0; intResult < jsoResults.length(); intResult++) {
+									for (Integer intResult = 0; intResult < jsoResults.length(); intResult++) {
 
-									JSONObject jsoBounds = jsoResults.getJSONObject(intResult).getJSONObject("geometry").getJSONObject("viewport");
+										JSONObject jsoBounds = jsoResults.getJSONObject(intResult).getJSONObject("geometry").getJSONObject("viewport");
 
-									float[] fltDistances = new float[1];
+										float[] fltDistances = new float[1];
 
-									Location.distanceBetween(
-											Double.parseDouble(jsoBounds.getJSONObject("northeast").getString("lat")),
-											Double.parseDouble(jsoBounds.getJSONObject("northeast").getString("lng")),
-											Double.parseDouble(jsoBounds.getJSONObject("southwest").getString("lat")),
-											Double.parseDouble(jsoBounds.getJSONObject("southwest").getString("lng")),
-											fltDistances);
+										Location.distanceBetween(
+												Double.parseDouble(jsoBounds.getJSONObject("northeast").getString("lat")),
+												Double.parseDouble(jsoBounds.getJSONObject("northeast").getString("lng")),
+												Double.parseDouble(jsoBounds.getJSONObject("southwest").getString("lat")),
+												Double.parseDouble(jsoBounds.getJSONObject("southwest").getString("lng")),
+												fltDistances);
 
-									if (((int) fltDistances[0] - fltAccuracy) < intMinimum) {
+										if (((int) fltDistances[0] - fltAccuracy) < intMinimum) {
 
-										intMinimum = (int) (fltDistances[0] - fltAccuracy);
-										edtInformation.expandedBody(jsoResults.getJSONObject(intResult).getString("formatted_address"));
-										edtInformation.clickIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0")));
+											intMinimum = (int) (fltDistances[0] - fltAccuracy);
+											edtInformation.expandedBody(jsoResults.getJSONObject(intResult).getString("formatted_address"));
+											edtInformation.clickIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0")));
+
+										}
 
 									}
 
+									edtInformation.visible(true);
+									publishUpdate(edtInformation);
+
+								} else {
+									BugSenseHandler.addCrashExtraData("Response", strResponse);
+									Log.w("LocationWidget", "Server encountered an error");
+									throw new Exception("Server encountered an error");
 								}
 
-								edtInformation.visible(true);
-								publishUpdate(edtInformation);
-
-							} else {
-								Log.w("LocationWidget", "Server encountered an error");
-								throw new Exception("Server encountered an error");
+							} catch (Exception e) {
+								edtInformation.visible(false);
+								Log.e("LocationWidget", "Encountered an error", e);
+								BugSenseHandler.sendException(e);
 							}
 
-						} catch (Exception e) {
-							edtInformation.visible(false);
-							Log.e("LocationWidget", "Encountered an error", e);
-							BugSenseHandler.sendException(e);
 						}
 
-					}
+					});
 
-				});
-
+				}
+				
 			}
 
 			if (new Random().nextInt(5) == 0) {
