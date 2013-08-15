@@ -15,6 +15,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.bugsense.trace.BugSenseHandler;
 import com.google.android.apps.dashclock.api.DashClockExtension;
@@ -135,10 +136,26 @@ public class LocationWidget extends DashClockExtension {
 									edtInformation.visible(true);
 									publishUpdate(edtInformation);
 
+								} else if (jsoResponse.getString("status").equalsIgnoreCase("ZERO_RESULTS")) {
+									Log.w("LocationWidget", "Google Reverse Geocoding API returned no results");
+									edtInformation.visible(false);
+									Toast.makeText(getApplicationContext(), R.string.zero_results, Toast.LENGTH_SHORT).show();
+								} else if (jsoResponse.getString("status").equalsIgnoreCase("OVER_QUERY_LIMIT")) {
+									Log.w("LocationWidget", "Google Reverse Geocoding API has hit the query limit");
+									edtInformation.visible(false);
+									Toast.makeText(getApplicationContext(), R.string.over_limit, Toast.LENGTH_SHORT).show();
+								} else if (jsoResponse.getString("status").equalsIgnoreCase("REQUEST_DENIED")) {
+									Log.e("LocationWidget", "Google Reverse Geocoding API denied the request");
+									edtInformation.visible(false);
+									throw new Exception("Google Reverse Geocoding API said invalid request");
+								} else if (jsoResponse.getString("status").equalsIgnoreCase("INVALID_REQUEST")) {
+									Log.e("LocationWidget", "Google Reverse Geocoding API said invalid request");
+									edtInformation.visible(false);
+									throw new Exception("Google Reverse Geocoding API said invalid request");
 								} else {
-									BugSenseHandler.addCrashExtraData("Response", strResponse);
-									Log.w("LocationWidget", "Server encountered an error");
-									throw new Exception("Server encountered an error");
+									Log.e("LocationWidget", "Google Reverse Geocoding API encountred an error");
+									edtInformation.visible(false);
+									throw new Exception("Google Reverse Geocoding API said invalid request");
 								}
 
 							} catch (Exception e) {
