@@ -86,7 +86,7 @@ public class LocationWidget extends DashClockExtension {
 				}
 
 				if (locNewest != null ) {
-					
+
 					final Float fltAccuracy = locNewest.getAccuracy();
 
 					Log.d("LocationWidget", "Making the rrequest to reverse geocode the coordinates");
@@ -97,65 +97,68 @@ public class LocationWidget extends DashClockExtension {
 						@Override
 						public void onSuccess(String strResponse) {
 
-							Log.v("LocationWidget", "Server reponded with: " + strResponse);
-
 							try {
 
-								JSONObject jsoResponse = new JSONObject(strResponse);
-								if (jsoResponse.getString("status").equalsIgnoreCase("OK")) {
+								Log.v("LocationWidget", "Server reponded with: " + strResponse);
+								if (!strResponse.trim().isEmpty()) {
 
-									edtInformation.expandedBody("");
-									edtInformation.expandedTitle(getString(R.string.location_info, fltAccuracy.intValue()));
+									JSONObject jsoResponse = new JSONObject(strResponse);
+									if (jsoResponse.getString("status").equalsIgnoreCase("OK")) {
 
-									JSONArray jsoResults = jsoResponse.getJSONArray("results");
-									Integer intMinimum = Integer.MAX_VALUE;
+										edtInformation.expandedBody("");
+										edtInformation.expandedTitle(getString(R.string.location_info, fltAccuracy.intValue()));
 
-									for (Integer intResult = 0; intResult < jsoResults.length(); intResult++) {
+										JSONArray jsoResults = jsoResponse.getJSONArray("results");
+										Integer intMinimum = Integer.MAX_VALUE;
 
-										JSONObject jsoBounds = jsoResults.getJSONObject(intResult).getJSONObject("geometry").getJSONObject("viewport");
+										for (Integer intResult = 0; intResult < jsoResults.length(); intResult++) {
 
-										float[] fltDistances = new float[1];
+											JSONObject jsoBounds = jsoResults.getJSONObject(intResult).getJSONObject("geometry").getJSONObject("viewport");
 
-										Location.distanceBetween(
-												Double.parseDouble(jsoBounds.getJSONObject("northeast").getString("lat")),
-												Double.parseDouble(jsoBounds.getJSONObject("northeast").getString("lng")),
-												Double.parseDouble(jsoBounds.getJSONObject("southwest").getString("lat")),
-												Double.parseDouble(jsoBounds.getJSONObject("southwest").getString("lng")),
-												fltDistances);
+											float[] fltDistances = new float[1];
 
-										if (((int) fltDistances[0] - fltAccuracy) < intMinimum) {
+											Location.distanceBetween(
+													Double.parseDouble(jsoBounds.getJSONObject("northeast").getString("lat")),
+													Double.parseDouble(jsoBounds.getJSONObject("northeast").getString("lng")),
+													Double.parseDouble(jsoBounds.getJSONObject("southwest").getString("lat")),
+													Double.parseDouble(jsoBounds.getJSONObject("southwest").getString("lng")),
+													fltDistances);
 
-											intMinimum = (int) (fltDistances[0] - fltAccuracy);
-											edtInformation.expandedBody(jsoResults.getJSONObject(intResult).getString("formatted_address"));
-											edtInformation.clickIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0")));
+											if (((int) fltDistances[0] - fltAccuracy) < intMinimum) {
+
+												intMinimum = (int) (fltDistances[0] - fltAccuracy);
+												edtInformation.expandedBody(jsoResults.getJSONObject(intResult).getString("formatted_address"));
+												edtInformation.clickIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0")));
+
+											}
 
 										}
 
+										edtInformation.visible(true);
+										publishUpdate(edtInformation);
+
+									} else if (jsoResponse.getString("status").equalsIgnoreCase("ZERO_RESULTS")) {
+										Log.w("LocationWidget", "Google Reverse Geocoding API returned no results");
+										edtInformation.visible(false);
+										Toast.makeText(getApplicationContext(), R.string.zero_results, Toast.LENGTH_SHORT).show();
+									} else if (jsoResponse.getString("status").equalsIgnoreCase("OVER_QUERY_LIMIT")) {
+										Log.w("LocationWidget", "Google Reverse Geocoding API has hit the query limit");
+										edtInformation.visible(false);
+										Toast.makeText(getApplicationContext(), R.string.over_limit, Toast.LENGTH_SHORT).show();
+									} else if (jsoResponse.getString("status").equalsIgnoreCase("REQUEST_DENIED")) {
+										Log.e("LocationWidget", "Google Reverse Geocoding API denied the request");
+										edtInformation.visible(false);
+										throw new Exception("Google Reverse Geocoding API said invalid request");
+									} else if (jsoResponse.getString("status").equalsIgnoreCase("INVALID_REQUEST")) {
+										Log.e("LocationWidget", "Google Reverse Geocoding API said invalid request");
+										edtInformation.visible(false);
+										throw new Exception("Google Reverse Geocoding API said invalid request");
+									} else {
+										Log.e("LocationWidget", "Google Reverse Geocoding API encountred an error");
+										edtInformation.visible(false);
+										throw new Exception("Google Reverse Geocoding API said invalid request");
 									}
 
-									edtInformation.visible(true);
-									publishUpdate(edtInformation);
-
-								} else if (jsoResponse.getString("status").equalsIgnoreCase("ZERO_RESULTS")) {
-									Log.w("LocationWidget", "Google Reverse Geocoding API returned no results");
-									edtInformation.visible(false);
-									Toast.makeText(getApplicationContext(), R.string.zero_results, Toast.LENGTH_SHORT).show();
-								} else if (jsoResponse.getString("status").equalsIgnoreCase("OVER_QUERY_LIMIT")) {
-									Log.w("LocationWidget", "Google Reverse Geocoding API has hit the query limit");
-									edtInformation.visible(false);
-									Toast.makeText(getApplicationContext(), R.string.over_limit, Toast.LENGTH_SHORT).show();
-								} else if (jsoResponse.getString("status").equalsIgnoreCase("REQUEST_DENIED")) {
-									Log.e("LocationWidget", "Google Reverse Geocoding API denied the request");
-									edtInformation.visible(false);
-									throw new Exception("Google Reverse Geocoding API said invalid request");
-								} else if (jsoResponse.getString("status").equalsIgnoreCase("INVALID_REQUEST")) {
-									Log.e("LocationWidget", "Google Reverse Geocoding API said invalid request");
-									edtInformation.visible(false);
-									throw new Exception("Google Reverse Geocoding API said invalid request");
-								} else {
-									Log.e("LocationWidget", "Google Reverse Geocoding API encountred an error");
-									edtInformation.visible(false);
-									throw new Exception("Google Reverse Geocoding API said invalid request");
 								}
 
 							} catch (Exception e) {
@@ -169,7 +172,7 @@ public class LocationWidget extends DashClockExtension {
 					});
 
 				}
-				
+
 			}
 
 			if (new Random().nextInt(5) == 0) {
