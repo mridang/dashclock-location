@@ -98,6 +98,8 @@ public class LocationWidget extends DashClockExtension {
 						public void onSuccess(String strResponse) {
 
 							try {
+								
+								BugSenseHandler.addCrashExtraData("Response", strResponse);
 
 								Log.v("LocationWidget", "Server reponded with: " + strResponse);
 								if (!strResponse.trim().isEmpty()) {
@@ -165,6 +167,8 @@ public class LocationWidget extends DashClockExtension {
 								edtInformation.visible(false);
 								Log.e("LocationWidget", "Encountered an error", e);
 								BugSenseHandler.sendException(e);
+							} finally {
+								BugSenseHandler.clearCrashExtraData();
 							}
 
 						}
