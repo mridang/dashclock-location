@@ -8,9 +8,9 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.ResolveInfo;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
@@ -35,7 +35,7 @@ public class LocationWidget extends DashClockExtension {
 
 		super.onCreate();
 		Log.d("LocationWidget", "Created");
-		BugSenseHandler.initAndStartSession(this, "b6e8d53d");
+		BugSenseHandler.initAndStartSession(this, getString(R.string.bugsense));
 
 	}
 
@@ -107,6 +107,7 @@ public class LocationWidget extends DashClockExtension {
 									JSONObject jsoResponse = new JSONObject(strResponse);
 									if (jsoResponse.getString("status").equalsIgnoreCase("OK")) {
 
+										BugSenseHandler.sendEvent("Successful Request");
 										edtInformation.expandedBody("");
 										edtInformation.expandedTitle(getString(R.string.location_info, fltAccuracy.intValue()));
 
@@ -140,22 +141,27 @@ public class LocationWidget extends DashClockExtension {
 										publishUpdate(edtInformation);
 
 									} else if (jsoResponse.getString("status").equalsIgnoreCase("ZERO_RESULTS")) {
+										BugSenseHandler.sendEvent("Zero Results");
 										Log.w("LocationWidget", "Google Reverse Geocoding API returned no results");
 										edtInformation.visible(false);
 										Toast.makeText(getApplicationContext(), R.string.zero_results, Toast.LENGTH_SHORT).show();
 									} else if (jsoResponse.getString("status").equalsIgnoreCase("OVER_QUERY_LIMIT")) {
+										BugSenseHandler.sendEvent("Over Limit");
 										Log.w("LocationWidget", "Google Reverse Geocoding API has hit the query limit");
 										edtInformation.visible(false);
 										Toast.makeText(getApplicationContext(), R.string.over_limit, Toast.LENGTH_SHORT).show();
 									} else if (jsoResponse.getString("status").equalsIgnoreCase("REQUEST_DENIED")) {
+										BugSenseHandler.sendEvent("Request Denied");
 										Log.e("LocationWidget", "Google Reverse Geocoding API denied the request");
 										edtInformation.visible(false);
 										throw new Exception("Google Reverse Geocoding API said invalid request");
 									} else if (jsoResponse.getString("status").equalsIgnoreCase("INVALID_REQUEST")) {
+										BugSenseHandler.sendEvent("Invalid Request");
 										Log.e("LocationWidget", "Google Reverse Geocoding API said invalid request");
 										edtInformation.visible(false);
 										throw new Exception("Google Reverse Geocoding API said invalid request");
 									} else {
+										BugSenseHandler.sendEvent("Unknown Response");
 										Log.e("LocationWidget", "Google Reverse Geocoding API encountred an error");
 										edtInformation.visible(false);
 										throw new Exception("Google Reverse Geocoding API said invalid request");
@@ -190,10 +196,13 @@ public class LocationWidget extends DashClockExtension {
 				} catch (NameNotFoundException e) {
 
 					Integer intExtensions = 0;
+				    Intent ittFilter = new Intent("com.google.android.apps.dashclock.Extension");
+				    String strPackage;
 
-					for (PackageInfo pkgPackage : mgrPackages.getInstalledPackages(0)) {
+				    for (ResolveInfo info : mgrPackages.queryIntentServices(ittFilter, 0)) {
 
-						intExtensions = intExtensions + (pkgPackage.applicationInfo.packageName.startsWith("com.mridang.") ? 1 : 0); 
+				    	strPackage = info.serviceInfo.applicationInfo.packageName;
+						intExtensions = intExtensions + (strPackage.startsWith("com.mridang.") ? 1 : 0); 
 
 					}
 
