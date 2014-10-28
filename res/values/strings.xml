@@ -1,10 +1,14 @@
 <resources>
 
     <string name="zero_results">Dashclock Location extension couldn\'t get your current location</string>
-    <string name="location_info">Location within %1$d meters</string>
+    <string name="location_mtrs">Location within %1$d meters</string>
+    <string name="location_feet">Location within %1$d feet</string>
     <string name="extension_name">Location</string>
     <string name="application_name">Dashclock Location Extension</string>
     <string name="extension_info">Displays information about the device\'s current location.</string>
     <string name="over_limit">Dashclock Location Extension has hit the usage limit from Google</string>
+    <string name="use_feet">Use feet</string>
+    <string name="preferences_title">Location Extension Settings</string>
+    <string name="feet_summary">Use feet as the metric when displaying the accuracy</string>
 
 </resources>

@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.mridang.location"
-    android:versionCode="11"
-    android:versionName="1.1" >
+    android:versionCode="12"
+    android:versionName="1.2" >
 
     <uses-sdk
         android:minSdkVersion="14"
@@ -34,7 +34,16 @@
             <meta-data
                 android:name="description"
                 android:value="@string/extension_info" />
+            <meta-data
+                android:name="settingsActivity"
+                android:value=".WidgetSettings" />
         </service>
+
+        <activity
+            android:name="com.mridang.location.WidgetSettings"
+            android:exported="true"
+            android:label="@string/preferences_title" >
+        </activity>
     </application>
 
 </manifest>

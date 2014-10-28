@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -16,6 +17,7 @@ import android.content.pm.ResolveInfo;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -56,6 +58,7 @@ public class LocationWidget extends DashClockExtension {
 
 			Log.d("LocationWidget", "Fetching the most recent and accurate fix");
 			LocationManager mgrLocation = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+			final SharedPreferences speSettings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
 			List<String> lstProviders = mgrLocation.getProviders(true);
 			if (lstProviders != null) {
@@ -108,8 +111,13 @@ public class LocationWidget extends DashClockExtension {
 											if (jsoResponse.getString("status").equalsIgnoreCase("OK")) {
 
 												edtInformation.expandedBody("");
-												edtInformation.expandedTitle(getString(R.string.location_info,
-														fltAccuracy.intValue()));
+												if (speSettings.getBoolean("usefeet", false)) {
+													edtInformation.expandedTitle(getString(R.string.location_feet,
+															(int) (fltAccuracy * 3.28F)));
+												} else {
+													edtInformation.expandedTitle(getString(R.string.location_mtrs,
+															fltAccuracy.intValue()));
+												}
 
 												JSONArray jsoResults = jsoResponse.getJSONArray("results");
 												Integer intMinimum = Integer.MAX_VALUE;

@@ -1,0 +1,10 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res/com.mridang.netbank" >
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="usefeet"
+        android:summary="@string/feet_summary"
+        android:title="@string/use_feet" />
+
+</PreferenceScreen>
