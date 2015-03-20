@@ -1,7 +1,6 @@
 package com.mridang.location;
 
 import java.util.List;
-import java.util.Random;
 
 import org.acra.ACRA;
 import org.json.JSONArray;
@@ -9,11 +8,8 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.pm.ResolveInfo;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
@@ -21,7 +17,6 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.google.android.apps.dashclock.api.DashClockExtension;
 import com.google.android.apps.dashclock.api.ExtensionData;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -29,17 +24,33 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 /*
  * This class is the main class that provides the widget
  */
-public class LocationWidget extends DashClockExtension {
+public class LocationWidget extends ImprovedExtension {
 
 	/*
-	 * @see com.google.android.apps.dashclock.api.DashClockExtension#onCreate()
+	 * (non-Javadoc)
+	 * @see com.mridang.location.ImprovedExtension#getIntents()
 	 */
-	public void onCreate() {
+	@Override
+	protected IntentFilter getIntents() {
+		return null;
+	}
 
-		super.onCreate();
-		Log.d("LocationWidget", "Created");
-		ACRA.init(new AcraApplication(getApplicationContext()));
+	/*
+	 * (non-Javadoc)
+	 * @see com.mridang.location.ImprovedExtension#getTag()
+	 */
+	@Override
+	protected String getTag() {
+		return getClass().getSimpleName();
+	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see com.mridang.location.ImprovedExtension#getUris()
+	 */
+	@Override
+	protected String[] getUris() {
+		return null;
 	}
 
 	/*
@@ -50,13 +61,13 @@ public class LocationWidget extends DashClockExtension {
 	@Override
 	protected void onUpdateData(int intReason) {
 
-		Log.d("LocationWidget", "Getting the location of the device");
+		Log.d(getTag(), "Getting the location of the device");
 		final ExtensionData edtInformation = new ExtensionData();
 		setUpdateWhenScreenOn(true);
 
 		try {
 
-			Log.d("LocationWidget", "Fetching the most recent and accurate fix");
+			Log.d(getTag(), "Fetching the most recent and accurate fix");
 			LocationManager mgrLocation = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 			final SharedPreferences speSettings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
@@ -94,7 +105,7 @@ public class LocationWidget extends DashClockExtension {
 
 					final Float fltAccuracy = locNewest.getAccuracy();
 
-					Log.d("LocationWidget", "Making the rrequest to reverse geocode the coordinates");
+					Log.d(getTag(), "Making the rrequest to reverse geocode the coordinates");
 					new AsyncHttpClient().get(
 							"http://maps.googleapis.com/maps/api/geocode/json?latlng=" + locNewest.getLatitude() + ","
 									+ locNewest.getLongitude() + "&sensor=false", new AsyncHttpResponseHandler() {
@@ -104,7 +115,6 @@ public class LocationWidget extends DashClockExtension {
 
 									try {
 
-										Log.v("LocationWidget", "Server reponded with: " + strResponse);
 										if (!strResponse.trim().isEmpty()) {
 
 											JSONObject jsoResponse = new JSONObject(strResponse);
@@ -150,35 +160,35 @@ public class LocationWidget extends DashClockExtension {
 												}
 
 												edtInformation.visible(true);
-												publishUpdate(edtInformation);
+												doUpdate(edtInformation);
 
 											} else if (jsoResponse.getString("status").equalsIgnoreCase("ZERO_RESULTS")) {
-												Log.w("LocationWidget",
+												Log.w(getTag(),
 														"Google Reverse Geocoding API returned no results");
 												edtInformation.visible(false);
 												Toast.makeText(getApplicationContext(), R.string.zero_results,
 														Toast.LENGTH_SHORT).show();
 											} else if (jsoResponse.getString("status").equalsIgnoreCase(
 													"OVER_QUERY_LIMIT")) {
-												Log.w("LocationWidget",
+												Log.w(getTag(),
 														"Google Reverse Geocoding API has hit the query limit");
 												edtInformation.visible(false);
 												Toast.makeText(getApplicationContext(), R.string.over_limit,
 														Toast.LENGTH_SHORT).show();
 											} else if (jsoResponse.getString("status").equalsIgnoreCase(
 													"REQUEST_DENIED")) {
-												Log.e("LocationWidget",
+												Log.e(getTag(),
 														"Google Reverse Geocoding API denied the request");
 												edtInformation.visible(false);
 												throw new Exception("Google Reverse Geocoding API said invalid request");
 											} else if (jsoResponse.getString("status").equalsIgnoreCase(
 													"INVALID_REQUEST")) {
-												Log.e("LocationWidget",
+												Log.e(getTag(),
 														"Google Reverse Geocoding API said invalid request");
 												edtInformation.visible(false);
 												throw new Exception("Google Reverse Geocoding API said invalid request");
 											} else {
-												Log.e("LocationWidget",
+												Log.e(getTag(),
 														"Google Reverse Geocoding API encountred an error");
 												edtInformation.visible(false);
 												throw new Exception("Google Reverse Geocoding API said invalid request");
@@ -188,7 +198,7 @@ public class LocationWidget extends DashClockExtension {
 
 									} catch (Exception e) {
 										edtInformation.visible(false);
-										Log.e("LocationWidget", "Encountered an error", e);
+										Log.e(getTag(), "Encountered an error", e);
 										ACRA.getErrorReporter().handleSilentException(e);
 									}
 
@@ -200,67 +210,24 @@ public class LocationWidget extends DashClockExtension {
 
 			}
 
-			if (new Random().nextInt(5) == 0 && !(0 != (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))) {
-
-				PackageManager mgrPackages = getApplicationContext().getPackageManager();
-
-				try {
-
-					mgrPackages.getPackageInfo("com.mridang.donate", PackageManager.GET_META_DATA);
-
-				} catch (NameNotFoundException e) {
-
-					Integer intExtensions = 0;
-					Intent ittFilter = new Intent("com.google.android.apps.dashclock.Extension");
-					String strPackage;
-
-					for (ResolveInfo info : mgrPackages.queryIntentServices(ittFilter, 0)) {
-
-						strPackage = info.serviceInfo.applicationInfo.packageName;
-						intExtensions = intExtensions + (strPackage.startsWith("com.mridang.") ? 1 : 0);
-
-					}
-
-					if (intExtensions > 1) {
-
-						edtInformation.visible(true);
-						edtInformation.clickIntent(new Intent(Intent.ACTION_VIEW).setData(Uri
-								.parse("market://details?id=com.mridang.donate")));
-						edtInformation.expandedTitle("Please consider a one time purchase to unlock.");
-						edtInformation
-								.expandedBody("Thank you for using "
-										+ intExtensions
-										+ " extensions of mine. Click this to make a one-time purchase or use just one extension to make this disappear.");
-						setUpdateWhenScreenOn(true);
-
-					}
-
-				}
-
-			} else {
-				setUpdateWhenScreenOn(true);
-			}
-
 		} catch (Exception e) {
 			edtInformation.visible(false);
-			Log.e("LocationWidget", "Encountered an error", e);
+			Log.e(getTag(), "Encountered an error", e);
 			ACRA.getErrorReporter().handleSilentException(e);
 		}
 
 		edtInformation.icon(R.drawable.ic_dashclock);
-		publishUpdate(edtInformation);
-		Log.d("LocationWidget", "Done");
+		doUpdate(edtInformation);
 
 	}
 
 	/*
-	 * @see com.google.android.apps.dashclock.api.DashClockExtension#onDestroy()
+	 * (non-Javadoc)
+	 * @see com.mridang.location.ImprovedExtension#onReceiveIntent(android.content.Context, android.content.Intent)
 	 */
-	public void onDestroy() {
-
-		super.onDestroy();
-		Log.d("LocationWidget", "Destroyed");
-
+	@Override
+	protected void onReceiveIntent(Context ctxContext, Intent ittIntent) {
+		onUpdateData(UPDATE_REASON_MANUAL);
 	}
 
 }
